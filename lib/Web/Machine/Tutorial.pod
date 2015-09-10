@@ -41,13 +41,13 @@ framework to some code that might look like this in C<Dancer>:
 
     package MyApp;
 
-    get /users/:user => sub { ...  };
+    get /users/:user => sub { ... };
 
 in C<Catalyst> the same handler may look something like:
 
     package MyApp::Controllers::Users;
 
-    sub index : Args(1) { ...  }
+    sub index : Args(1) { ... }
 
 In both these examples the key is that the URL dispatches to one single routine
 that handles that request in its entirity. This can me a lot of duplicated code
@@ -79,9 +79,13 @@ framework to some code that might look like this for C<Web::Machine>:
 
     has id => ();
 
-    sub content_types_excepted { return [ {'application/json' => 'to_json'} ] }
+    sub content_types_excepted {
+        return [
+            {'application/json' => 'to_json'}
+        ]
+    }
 
-    sub to_json { ...  }
+    sub to_json { ... }
 
 Here we see that the URL is dispatched to a Resource and the request is handled
 by multiple routines each designed to support a singular part of the HTTP spec.
@@ -113,7 +117,11 @@ L<Routing|Web::Machine::Tutorial::Routing>
 
 =item *
 
-L<GET|Web::Machine::Tutorial::RequestBasics>
+L<GET|Web::Machine::Tutorial::BasicResourcesI>
+
+=item *
+
+L<POST/PUT/DELETE|Web::Machine::Tutorial::BasicResourcesII>
 
 =item *
 
@@ -121,11 +129,7 @@ L<AUTHZ/AUTHN|Web::Machine::Tutorial::Auth>
 
 =item *
 
-L<POST/PUT/DELETE|Web::Machine::Tutorial::RequestAdvanced>
-
-=item *
-
-L<Advanced Resources|Web::Machine::Tutorial::Advanced>
+L<Advanced Resources|Web::Machine::Tutorial::AdvancedResources>
 
 =back
 
