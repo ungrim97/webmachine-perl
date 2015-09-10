@@ -1,0 +1,137 @@
+package Web::Machine::Tutorial; # Let PAUSE find the POD
+
+#ABSTRACT: Guide to getting running with Web::Machine
+
+__END__
+
+=pod
+
+=head1 NAME
+
+Web::Machine::Tutorial - Index page for tutorial guide
+
+=head1 Web::Machine
+
+Web::Machine is a novel method of handling HTTP Web Requests, that allows
+developers to fully utilize the full range of HTTP spec in an easy and
+intuitive manner. Its main aim is to allow full HTTP utilization whilst also
+allowing code reuse.
+
+=head1 Action Vs Resource Orientated Frameworks
+
+Many people will be familiar with many of the existing MVC style Web
+Frameworks.  Things like C<Catalyst>, C<Dancer> and C<Mojolicious> are
+incredibly popular amongst web developers. Here we will refer to frameworks
+that work like this as being B<Action Orientated Frameworks>. C<Web::Machine>
+in contrasty we define here as being a B<Resource Orientated Framework>. A key
+part to understanding how to use Web::Machine is to understand the difference
+between these two concepts.
+
+=head1 Action Orientated Frameworks
+
+Almost all 'Modern' Web Frameworks in use today are what are refered to here as
+B<Action Orientated Frameworks>. This is because of the way in which they route
+requests, mapping a specific URL to a action routine within the Framework. An
+example might be the following request:
+
+    GET /users/1/?format=json
+
+In B<Action Orientated Frameworks> this would likely be routed within the
+framework to some code that might look like this in C<Dancer>:
+
+    package MyApp;
+
+    get /users/:user => sub { ...  };
+
+in C<Catalyst> the same handler may look something like:
+
+    package MyApp::Controllers::Users;
+
+    sub index : Args(1) { ...  }
+
+In both these examples the key is that the URL dispatches to one single routine
+that handles that request in its entirity. This can me a lot of duplicated code
+to handle many of the needed tasks, authz/authn, serialization, caching etc.
+Some of these tasks are managed by plugins or middleware and some are left as
+an excercise to the user.
+
+This is fine for standard HTML serving web applications as the limited use of
+HTTP this style leads to fits with many browsers cut down implemenation of
+HTTP. However it also makes implementing APIs a needlessly tricky endevour and
+can also encourage poor design choices.
+
+=head1 Resource Orientated Frameworks
+
+Web::Machine in contrast are what are refered to here as B<Resource Orientated
+Frameworks>.  This is because the URL is routed to a specific resource. An
+example might be the following request:
+
+    GET /users/1
+
+    Accept: application/json
+
+In B<Resource Orientated Frameworks> this would likely be routed outside of the
+framework to some code that might look like this for C<Web::Machine>:
+
+    package MyApp::Resource::User;
+
+    use Moo;
+
+    has id => ();
+
+    sub content_types_excepted { return [ {'application/json' => 'to_json'} ] }
+
+    sub to_json { ...  }
+
+Here we see that the URL is dispatched to a Resource and the request is handled
+by multiple routines each designed to support a singular part of the HTTP spec.
+This ensures that the request is handled in a very predictable way, allowing
+for greater code reuse, easier maintainability and a web app design that better
+reflects HTTP.
+
+Sadly as noted above, browsers are rather poor at understanding or supporting
+the full range of HTTP, this can mean that for more traditional Web
+Applications the use of B<Resource Orientated Frameworks> can involve an
+infuriating use of workarounds to support the way in which browsers actually
+use HTTP to make and receive requests.
+
+For applications that need a full API or for web applications that are designed
+as a series of specific resources than Web::Machine is idea for handling all of
+the parts of HTTP in a convenient and predicatable way.
+
+=head1 Contents
+
+=over
+
+=item *
+
+L<Resources|Web::Machine::Tutorial::Resource>
+
+=item *
+
+L<Routing|Web::Machine::Tutorial::Routing>
+
+=item *
+
+L<GET|Web::Machine::Tutorial::RequestBasics>
+
+=item *
+
+L<AUTHZ/AUTHN|Web::Machine::Tutorial::Auth>
+
+=item *
+
+L<POST/PUT/DELETE|Web::Machine::Tutorial::RequestAdvanced>
+
+=item *
+
+L<Advanced Resources|Web::Machine::Tutorial::Advanced>
+
+=back
+
+=head1 COPYRIGHT
+
+This library is free software. You can redistribute it and/or modify it under
+the same tems as Perl itself.
+
+=cut

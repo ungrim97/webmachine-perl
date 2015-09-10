@@ -1,0 +1,98 @@
+package Web::Machine::Tutorial::Resource;
+
+#ABSTRACT: Building a Resource Class
+
+__END__
+
+=pod
+
+=head1 NAME
+
+Web::Machine::Tutorial::Resource - Building a Resource Class
+
+=head1 Resources
+
+L<RFC 3986|https://tools.ietf.org/html/rfc3986> defines a resource as:
+
+    This specification does not limit the scope of what might be a resource;
+    rather, the term "resource" is used in a general sense for whatever might
+    be identified by a URI.  Familiar examples include an electronic document,
+    an image, a source of information with a consistent purpose (e.g., "today's
+    weather report for Los Angeles"), a service (e.g., an HTTP-to-SMS gateway),
+    and a collection of other resources.  A resource is not necessarily
+    accessible via the Internet; e.g., human beings, corporations, and bound
+    books in a library can also be resources.  Likewise, abstract concepts can
+    be resources, such as the operators and operands of a mathematical
+    equation, the types of a relationship (e.g., "parent" or "employee"), or
+    numeric values (e.g., zero, one, and infinity).
+
+This isn't a particularly helpful definition. For simplicity we will use the
+first part of this:
+
+    [a] "resource" is used in a general sense for whatever might be identified
+    by a URI.
+
+This definition is nices as it makes clear that the URI is expected to map to a
+specific resource. For our purposes most of our Resource classes will be fairly
+analgous to a Controller class. A good rule of thumb is that a Resource is a
+'Noun' that can be acted upon by a user and is referenced by a URI.
+
+=head1 Creating an Artist Resource
+
+Ubiquitous in online tutorials is the Artists/CDs example. Making no exceptions
+we will use this model for the tutorial here.
+
+Each Resource in a Web::Machine application is a single class that extends
+L<Web::Machine::Resource>. A single Resource class will have two attributes
+defined by the parent class, I<request> and I<response>, these are instances of
+L<Plack::Request> and L<Plack::Response> respectively.
+
+It will also have a series of methods defined with defaults for handling the
+various questions asked by the HTTP flow of a request. These are handled
+accoring to the L<HTTP State
+Diagram|https://raw.githubusercontent.com/basho/webmachine/master/docs/http-headers-status-v3.png>.
+
+Because of this writing a Resource class that does very little is very easy.
+Assuming you have an Application call MyApp then our Artist resource might
+start like:
+
+    package MyApp::Resource::Artists; # Plurals are common for 'Collection' style resources
+
+    =head1 NAME
+
+    MyApp::Resource::Artists - Resource for handling /artists requests
+
+    =cut
+
+    use Moo;
+
+    extends 'Web::Machine::Resource';
+
+    1;
+
+Whilst this is not a very helpful Resource class it nicely shows how the base
+class provides a lot of default answers that allow for DWIM style code. In this
+case the following request/response would be generated from calling this
+resource:
+
+    GET /artists
+
+    Accept: application/json
+
+    ---
+
+    406 Not Acceptable
+
+This is because we haven't defined any Accepted content types so Web::Machine
+correctly returns a 406 to indicated to the user that the Accept headers
+weren't supported.
+
+Not also that there is no specific handling of the HTTP Verb 'GET' here, again
+this is handled for us. We will see in L<Resource
+Basics|Web::Machine::Tutorial::ResourceBasics> how we can extend this to
+actually return data.
+
+Before that we probably want a working Application Server so we can then test
+our Resource.
+
+L<Routing|Web::Machine::Tutorial::Routing>

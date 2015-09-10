@@ -1,0 +1,151 @@
+package Web::Machine::Tutorial::Routing;
+
+#ABSTRACT: Adding Routing to our Application
+
+__END__
+
+=pod
+
+=head1 NAME
+
+Web::Machine::Tutorial::Routing - Adding Routes to our App
+
+=head1 Routing
+
+Many Web Frameworks handle routing of URLs from a base URL internally.  This is
+mostly due to complicated dispatching rules.
+
+Web::Machine makes use of external routing tools, with each resource being a
+seperate instance of Web::Machine.
+
+=head1 app.psgi
+
+Web::Machine uses Plack to handle running the app and server. So we a simple
+plack app is needed:
+
+    #!/usr/bin/env perl    #app.psgi
+
+    use Plack::Builder;
+
+    builder {
+        mount '/artists' => $user_resource,
+    }
+
+Each Web::Machine resource exists within its own instance of Web::Machine.
+To Create a initialize a new Web::Machine app we use the following:
+
+    my $app = Web::Machine->new(
+        resource => '', # Package name of resource class
+        resource_args  => [], # Args passed to resource class constructor
+    )->to_app;
+
+So with this we can now modify the above app.psgi to route our new Artists
+resource
+
+    #!/usr/bin/env perl
+    #app.psgi
+
+    use Plack::Builder;
+
+    use Web::Machine;
+    use MyApp::Resource::Artists;
+
+    my $user_resource = Web::Machine->new(
+        resource => 'MyApp::Resource::Artists',
+        # use of resource_args is optional
+    )->to_app
+
+    builder {
+        mount '/artists' => $user_resource,    }
+    }
+
+Then we can run that with C<plackup app.psgi> and we should see the following:
+
+    HTTP::Server::PSGI: Accepting connections at http://0:5000/
+
+
+Running C<curl -XGET 'http://0:5000/artists'> should see something like:
+
+    * Hostname was NOT found in DNS cache
+    *   Trying 0.0.0.0...
+    * Connected to 0 (127.0.0.1) port 5000 (#0)
+    > GET / HTTP/1.1
+    > User-Agent: curl/7.38.0
+    > Host: 0:5000
+    > Accept: */*
+    >
+    * HTTP 1.0, assume close after body
+    < HTTP/1.0 406 Not Acceptable
+    < Date: Thu, 10 Sep 2015 08:57:53 GMT
+    < Server: HTTP::Server::PSGI
+    < Content-Length: 14
+    < Content-Type: text/plain
+    <
+    * Closing connection 0
+    Not Acceptable%
+
+If you have got this output then everything is working as expected and you now
+have a working, if not very useful, Web::Machine Application.
+
+We probably don't want to set each route by hand however so having a proper
+router would be useful. L<Path::Router> and its Plack incarnation
+L<Plack::App::Path::Router> will serve us well. It will give use both url
+validation and most important it supports reverse URL lookup from a Resource
+class, which is very useful if a resource needs to call another resource or
+provide a link in its returned data.
+
+=head1 Path::Router
+
+L<Path::Router> provides reversible routing for Perl. The reversibility is a
+key benifit than can be leveraged in providing links to other resources easily
+it also allows for nicely templated URL structures.
+
+For use as a router in Plack, L<Plack::App::Path::Router> provides a nice
+wrapper for Path::Router that makes it easier to embed in Plack applications.
+
+We can thus update our C<app.psgi> as following:
+
+    #!/usr/bin/env perl
+    #app.psgi
+
+    use Plack::Builder;
+    use Path::Router;
+    use Plack::App::Path::Router;
+
+    use Web::Machine;
+    use MyApp::Resource::Artists;
+
+    my $router = Path::Router->new();
+
+    $router->add_route('/artists' =>
+        defaults => {
+            resource => 'MyApp::Resource::Artists', # allow reverse lookup
+        },
+        target => sub {
+            my ($request) = @_;
+
+            my $app = Web::Machine->new(
+                resource => 'MyApp::Resource::Artists',
+                resource_args => [
+                    router => $router
+                ]
+            )->to_app;
+            $app->($request->env); # Web::Machine expects Plack Env not request
+    );
+
+    # Now we can mount the entire app on a base dir
+    builder {
+        mount '/' => Plack::App::Path::Router->new(router => $router)->to_app;
+    }
+
+Things to note here are that Web::Machine expects a Plack env hash for each
+request but Path::Router passes through the Plack::Request object. This is
+solved by just calling C<env> on the request object.
+
+Secondly we want to pass the router into the Resource so that it can actually
+do the reverse path lookups if needed. We will see in the next step how we can
+use this.
+
+So now we have a routeable Web::Machine application. Lets make it more useful
+
+L<Resource Basics|Web::Machine::Tutorial::ResourceBasics>

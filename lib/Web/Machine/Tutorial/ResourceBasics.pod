@@ -1,0 +1,190 @@
+package Web::Machine::Tutorial::ResourceBasics;
+
+#ABSTRACT: Make a resource return data
+
+__END__
+
+=pod
+
+=head1 NAME
+
+Web::Machine::Tutorial::ResourceBasices - Returning Data
+
+=head1 Content Negotiation
+
+In order to return data, it is important that the client knows what formats
+you support and allows you to handle a requested format specifically. For
+this reason Web::Machine ties GET request handling in with handling for
+Accept headers.
+
+For this the Web::Machine::Resource parent provides the method C<content_types_accepted>
+which should be overloaded in the child class to list the formats that
+your resource class can handle. C<content_types_accepted> should return
+an array-ref of hashrefs mapping content MIME types to a callback function used
+to generate data in that format. This is by default and empty array which
+is why the GET request earlier returned a I<406 Not Acceptable> response.
+
+    sub content_types_accepted {
+        return [
+            {'application/json' => 'to_json'},
+            {'text/xml'         => 'to_xml'}
+        ]
+    }
+
+The above specifies that our application can only return content in a JSON
+or XML formats (and will return a 406 if asked for any other type) and the
+C<to_json> function will be called to generate the data to be returned if
+the client specifies they wish data as JSON or C<to_xml> will be called
+if they ask for XML. The first item in this list will be used as the 'default'
+type if the client uses I<Accept: */*>.
+
+=head1 Collections VS Items
+
+In an idea world all things can be divided up into a Group of things or a single
+thing. Here these are referred to as Collections and Items collectively.
+
+Collections are often referred to by broad URLS such as our I</artists> one. Items
+are usually more specific and keyed by some kind of ID such as I</artists/gsd87y21>
+This is by no means a hard and fast rule, but it allows for easier templating
+of URLs. For our examples we will be focusing on resources of these types.
+
+=head1 GET /artists
+
+In the previous tutorial we looked at making a request to C<curl -XGET '/artists'>.
+That is the client has specified a GET request to the C</artists> collection resource
+as they wish to get all artists data.
+
+Currently our application doesn't support any MIME types. Lets add a handler to
+our lib/MyApp/Resource/Artists.pm to support returning the artists formated as JSON:
+
+    package MyApp::Resource::Artists;
+
+    use Moo;
+
+    use JSON;
+
+    extends 'Web::Machine::Resource';
+
+    has router => (is => 'ro'); # Accept the router as a param
+
+    sub content_types_accepted {
+        return [
+            {'application/json' => 'as_json'},
+        ]
+    }
+
+    sub as_json {
+        my $db = MyApp::Schema->connect(); # Assumed use of DBIx::Class
+        my @artists = map {$_->get_columns} ($db->resultset('Artists')->all);
+
+        return JSON::encode_json(\@artists);
+    }
+
+    1;
+
+B<CAVEAT>: We make the assumption your are familiar with DBIx::Class or at least
+the meaning of its syntax. You can find more information at L<DBIx::Class> or
+L<DBIx::Class::Manual>. There is no requirement to use DBIx::Class in your
+Web::Machine applications and it is merely used here for expedience.
+
+Here we can see a very simplistic handler for returning all the Artists data
+in a database to the user as JSON. Web::Machine automatically handles setting
+the HTTP Headers and Status code for us so we just return a string from C<as_json>
+which will be returned to the client.
+
+Currently this string must be Bytes as we haven't specified a C<charset> option
+but as this is what C<encode_json> returns thats fine. We probably what to specify
+our charset however. This is easily done, just add the following:
+
+    sub charsets_provided {
+        return ['UTF-8', ISO-8859'];
+    }
+
+    sub default_charset {
+        return 'UTF-8';
+    }
+
+Charsets defined here must be valid for the Encode moduel and the returned data will
+be passed to the L<Encode::encode> function for encoding. As JSON returns an encoded
+string we need to make sure we don't generate Bytes but let Web::Machine do that for
+us.
+
+So we need to change our C<as_json> method to use the C<to_json> function in L<JSON>
+rather than the C<encode_json>
+
+    sub as_json {
+        my $db = MyApp::Schema->connect(); # Assumed use of DBIx::Class
+        my @artists = map {$_->get_columns} ($db->resultset('Artists')->all);
+
+        return JSON::to_json(\@artists);
+    }
+
+Now Web::Machine can automatically handle encoding the response based on the users
+C<Accept-Charset> header or use 'UTF-8' be default.
+
+=head1 GET /artists/:id
+
+We probaly don't want the client to always have to request all artists when they want
+some data on a single artist. So lets add a new Resource that returns just single Items
+rather than a collection. Now might be a good time to go and try this first before
+we show the solution. Things to ensure:
+
+=over
+
+=item *
+
+You pass the artist unique id from the URL
+
+=item *
+
+You add a new route for your Item resource
+
+=item *
+
+If your adventurous add handling for if that Item doesn't exist in the DB
+
+=back
+
+Ok so how can we do this. First create a new Resource class I<lib/MyApp/Resource/Artist.pm>
+and then we add some similar code to last time:
+
+    package MyApp::Resource::Artist;
+
+    use Moo;
+
+    extends 'Web::Machine::Resource';
+
+    has router => (is => 'ro');
+
+    sub content_types_accepted {
+        return [
+            {'application/json' => 'as_json'},
+        ];
+    }
+
+    sub charsets_provided {
+        return ['UTF-8', 'ISO-8859'];
+    }
+
+    sub default_charset {
+        return 'UTF-8';
+    }
+
+    sub as_json {
+        my ($self) = @_;
+
+        return JSON::to_json($self->artist->get_columns);
+    }
+
+    1;
+
+All of the above should be familiar. The only difference is that we are now
+returning a single Artist via the C<artist> method on the Resource object.
+
+    sub artist {
+        my ($self) = @_;
+        my $db = MyApp::Schema->connect(); # Assumed use of DBIx::Class
+        return $db->resultset('Artist')->find($self->id);
+    }
+
+Again this is just an extraction of code similar to above retrieval 
