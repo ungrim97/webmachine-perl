@@ -3,6 +3,7 @@ package MyApp::Router;
 use Moo;
 
 use Module::Find qw/usesub/;
+use MyApp::Schema;
 use Path::Router;
 use Path::Tiny;
 use Plack::App::Path::Router;
@@ -13,9 +14,12 @@ sub build_routes_for_app {
 
     my $router = Path::Router->new();
 
+    my $schema = MyApp::Schema->connect('dbi:SQLite::dbname=:memory:');
+    $schema->deploy;
+
     my @resources = usesub("${app}::Resources");
     for my $resource (@resources){
-        $router = $resource->add_route($router);
+        $router = $resource->add_route($router, $schema);
     }
 
     return Plack::App::Path::Router->new(router => $router);

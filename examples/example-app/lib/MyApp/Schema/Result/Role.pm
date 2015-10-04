@@ -14,6 +14,8 @@ __PACKAGE__->add_columns(
     }
 );
 
+__PACKAGE__->set_primary_key('roleid');
+
 __PACKAGE__->has_many(role_users => 'MyApp::Schema::Result::UserRole', 'roleid');
 __PACKAGE__->many_to_many('users', 'role_users', 'user');
 

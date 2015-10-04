@@ -14,6 +14,8 @@ __PACKAGE__->add_columns(
     },
 );
 
+__PACKAGE__->set_primary_key(qw/artistid cdid/);
+
 __PACKAGE__->belongs_to(artist => 'MyApp::Schema::Result::Artist', 'artistid');
 __PACKAGE__->belongs_to(cd     => 'MyApp::Schema::Result::CD', 'cdid');
 

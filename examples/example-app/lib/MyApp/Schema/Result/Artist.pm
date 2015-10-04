@@ -13,7 +13,9 @@ __PACKAGE__->add_column(
     },
 );
 
-__PACKAGE__->has_many(artist_cds => 'MyApp::Schema::Result::CDArtists', 'artistid');
+__PACKAGE__->set_primary_key('artistid');
+
+__PACKAGE__->has_many(artist_cds => 'MyApp::Schema::Result::CDArtist', 'artistid');
 __PACKAGE__->many_to_many('cds', 'artist_cds', 'cd');
 
 __PACKAGE__->has_many(artist_tracks => 'MyApp::Schema::Result::TrackArtist', 'artistid');

@@ -6,10 +6,40 @@ use Web::Machine;
 
 extends 'Web::Machine::Resource';
 
-sub add_route {
-    my ($class, $router) = @_;
+has router => (is => 'ro');
+has artist_id => (is => 'ro', required => 1);
+has artist => (
+    is => 'lazy',
+);
+has schema => (is => 'ro');
 
-    $router->add_route("/artist/:id" => {
+sub _build_artist {
+    my ($self) = @_;
+
+    return $self->schema->resultset('Artist')->find($self->artist_id);
+}
+
+sub resource_exists {
+    return !! shift->artist;
+}
+
+sub content_types_provided {
+    my ($self) = @_;
+
+    return [
+        {'application/json' => 'as_json'}
+    ];
+}
+
+sub as_json {
+
+}
+
+
+sub add_route {
+    my ($class, $router, $schema) = @_;
+
+    $router->add_route("/artists/:id" => (
         validation => {
             id => Int,
         },
@@ -23,13 +53,14 @@ sub add_route {
                 resource => $class,
                 resource_args => [
                     artist_id => $id,
+                    schema    => $schema,
                     router    => $router,
                 ],
             )->to_app;
 
             return $app->($request->env);
         }
-    });
+    ));
 
     return $router;
 }

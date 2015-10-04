@@ -1,4 +1,4 @@
-package MyAPP::Schema::Result::User;
+package MyApp::Schema::Result::User;
 
 use base qw/DBIx::Class::Core/;
 
@@ -26,7 +26,9 @@ __PACKAGE__->add_columns(
     },
 );
 
-__PACKAGE__->has_many(user_roles => 'MyApp::Schema::Result::UserRoles', 'userid');
+__PACKAGE__->set_primary_key('userid');
+
+__PACKAGE__->has_many(user_roles => 'MyApp::Schema::Result::UserRole', 'userid');
 __PACKAGE__->many_to_many(roles => 'user_roles', 'role');
 
 sub can_edit {

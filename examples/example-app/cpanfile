@@ -1,0 +1,7 @@
+requires 'DBIx::Class';
+requires 'Path::Router';
+requires 'Path::Tiny';
+requires 'Plack';
+requires 'Plack::App::Path::Router';
+requires 'Type::Tiny';
+requires 'Web::Machine';

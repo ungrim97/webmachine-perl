@@ -14,6 +14,8 @@ __PACKAGE__->add_columns(
     },
 );
 
+__PACKAGE__->set_primary_key(qw/userid roleid/);
+
 __PACKAGE__->belongs_to('role', 'MyApp::Schema::Result::Role', 'roleid');
 __PACKAGE__->belongs_to('user', 'MyApp::Schema::Result::User', 'userid');
 

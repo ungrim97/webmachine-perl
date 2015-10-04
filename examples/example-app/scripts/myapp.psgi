@@ -10,5 +10,6 @@ use MyApp;
 use Plack::Builder;
 
 builder {
+    enable 'Debug';
     mount '/' => MyApp->as_app;
 };

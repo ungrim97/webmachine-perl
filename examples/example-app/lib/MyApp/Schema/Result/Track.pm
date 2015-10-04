@@ -20,6 +20,8 @@ __PACKAGE__->add_columns(
     }
 );
 
+__PACKAGE__->set_primary_key('trackid');
+
 __PACKAGE__->has_many(track_artists => 'MyApp::Schema::Result::TrackArtist', 'trackid');
 __PACKAGE__->many_to_many('artists', 'track_artists', 'artist');
 

@@ -18,9 +18,11 @@ __PACKAGE__->add_columns(
     },
 );
 
+__PACKAGE__->set_primary_key('cdid');
+
 __PACKAGE__->has_many(tracks => 'MyApp::Schema::Result::Track', 'cdid');
 
-__PACKAGE__->has_many(cd_artists => 'MyApp::Schema;:Result::CDArtist', 'cdid');
+__PACKAGE__->has_many(cd_artists => 'MyApp::Schema::Result::CDArtist', 'cdid');
 __PACKAGE__->many_to_many('artists', 'cd_artists', 'artist');
 
 
