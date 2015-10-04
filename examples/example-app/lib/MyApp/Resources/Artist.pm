@@ -1,10 +1,17 @@
 package MyApp::Resources::Artist;
 
 use Moo;
+
+use JSON ();
 use Types::Standard qw/Int/;
 use Web::Machine;
 
 extends 'Web::Machine::Resource';
+
+with 'MyApp::Roles::ContentType';
+with 'MyApp::Roles::Charset';
+with 'MyApp::Roles::Exists';
+with 'MyApp::Roles::Auth';
 
 has router => (is => 'ro');
 has artist_id => (is => 'ro', required => 1);
@@ -19,22 +26,23 @@ sub _build_artist {
     return $self->schema->resultset('Artist')->find($self->artist_id);
 }
 
-sub resource_exists {
-    return !! shift->artist;
-}
-
-sub content_types_provided {
-    my ($self) = @_;
-
-    return [
-        {'application/json' => 'as_json'}
-    ];
-}
+sub allowed_methods {return [qw/GET PUT OPTIONS HEAD POST/]}
 
 sub as_json {
+    my ($self) = @_;
 
+    return JSON::encode_json({$self->artist->get_columns});
 }
 
+sub from_json {
+    my ($self) = @_;
+
+    if ($self->artist){
+        $self->artist->update(JSON::decode_json($self->request->content));
+    } else {
+        $self->schema->resultset('Artist')->create(JSON::decode_json($self->request->content));
+    }
+}
 
 sub add_route {
     my ($class, $router, $schema) = @_;
