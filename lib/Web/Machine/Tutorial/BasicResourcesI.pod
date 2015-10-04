@@ -1,4 +1,5 @@
-package Web::Machine::Tutorial::BasicResourcesI;
+p
+ackage Web::Machine::Tutorial::BasicResourcesI;
 
 #ABSTRACT: Make a resource return data
 
@@ -42,7 +43,8 @@ client uses I<Accept: */*>.
 =head1 Collections VS Items
 
 In an idea world all things can be divided up into a Group of things or a
-single thing. Here these are referred to as Collections and Items collectively.
+single thing. Here these are referred to as Collections/Sets and Items
+respectively.
 
 Collections are often referred to by broad URLS such as our I</artists> one.
 Items are usually more specific and keyed by some kind of ID such as
