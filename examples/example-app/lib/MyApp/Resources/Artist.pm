@@ -8,17 +8,17 @@ use Web::Machine;
 
 extends 'Web::Machine::Resource';
 
-with 'MyApp::Roles::ContentType';
+with 'MyApp::Roles::Auth';
+with 'MyApp::Roles::Content';
 with 'MyApp::Roles::Charset';
 with 'MyApp::Roles::Exists';
-with 'MyApp::Roles::Auth';
+with 'MyApp::Roles::ItemRoute';
+with 'MyApp::Roles::Schema';
 
-has router => (is => 'ro');
 has artist_id => (is => 'ro', required => 1);
 has artist => (
     is => 'lazy',
 );
-has schema => (is => 'ro');
 
 sub _build_artist {
     my ($self) = @_;
@@ -28,7 +28,9 @@ sub _build_artist {
 
 sub allowed_methods {return [qw/GET PUT OPTIONS HEAD POST/]}
 
-sub as_json {
+sub path_part {return 'artists'};
+
+sub to_json {
     my ($self) = @_;
 
     return JSON::encode_json({$self->artist->get_columns});
@@ -42,35 +44,6 @@ sub from_json {
     } else {
         $self->schema->resultset('Artist')->create(JSON::decode_json($self->request->content));
     }
-}
-
-sub add_route {
-    my ($class, $router, $schema) = @_;
-
-    $router->add_route("/artists/:id" => (
-        validation => {
-            id => Int,
-        },
-        defaults => {
-            resource => $class,
-        },
-        target => sub {
-            my ($request, $id) = @_;
-
-            my $app = Web::Machine->new(
-                resource => $class,
-                resource_args => [
-                    artist_id => $id,
-                    schema    => $schema,
-                    router    => $router,
-                ],
-            )->to_app;
-
-            return $app->($request->env);
-        }
-    ));
-
-    return $router;
 }
 
 1;
