@@ -1,4 +1,4 @@
-package MyApp::Resources::Artists;
+package MyApp::Resources::CDs;
 
 use Moo;
 
@@ -13,26 +13,26 @@ with 'MyApp::Roles::Content';
 with 'MyApp::Roles::Exists';
 with 'MyApp::Roles::Charset';
 
-has artists => (
+has cds => (
     is      => 'rw',
     lazy    => 1,
     builder => 1,
 );
 
-sub _build_artists {
+sub _build_cds {
     my ($self) = @_;
 
-    [$self->schema->resultset('Artist')->all()];
+    [$self->schema->resultset('CD')->all()];
 }
 
-sub path_part {return 'artists'}
+sub path_part {return 'cds'}
 
 sub allowed_methods {return [qw/GET PUT POST DELETE HEAD OPTIONS/]}
 
 sub to_json {
     my ($self) = @_;
 
-    return JSON::encode_json([map +{$_->get_columns}, @{$self->artists}]);
+    return JSON::encode_json([map +{$_->get_columns}, @{$self->cds}]);
 }
 
 sub post_is_create { return 1 }
@@ -47,25 +47,25 @@ sub create_path {
 sub from_json {
     my ($self) = @_;
 
-    my $artists = JSON::decode_json($self->request->content);
+    my $cds = JSON::decode_json($self->request->content);
 
     # To be idempotic we need to delete all data first
     # not just update it
-    if ($self->artists){
-        $self->artists->delete
+    if ($self->cds){
+        $self->cds->delete
     }
 
-    for my $artist (@$artists){
-        if ($self->request->method eq 'PUT' && ! $artist->{artistid}){
+    for my $cd (@$cds){
+        if ($self->request->method eq 'PUT' && ! $cd->{cdid}){
             http_throw(BadRequest => {
-                message => 'Invalid Data: Must have a artistid primary key at:\n'.JSON::encode_json($artist),
+                message => 'Invalid Data: Must have a cdid primary key at:\n'.JSON::encode_json($cd),
             });
         }
 
-        $self->schema->resultset('Artist')->create($artist);
+        $self->schema->resultset('CD')->create($cd);
     }
 
-    $self->artists($self->_build_artists);
+    $self->cds($self->_build_cds);
 
     return $self->to_json;
 }

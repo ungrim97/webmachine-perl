@@ -24,7 +24,7 @@ sub add_route {
             my $app = Web::Machine->new(
                 resource => $class,
                 resource_args => [
-                    artist_id => $id,
+                    id => $id,
                     schema    => $schema,
                     router    => $router,
                 ],

@@ -12,7 +12,8 @@ sub resource_exists {
 
     my $resource = $self->$resource_key;
 
-    return !! ref $resource eq 'ARRAY' ? @{$resource} : $resource;
+    warn $resource;
+    return !! (ref $resource eq 'ARRAY') ? scalar @{$resource} : $resource;
 }
 
 1;

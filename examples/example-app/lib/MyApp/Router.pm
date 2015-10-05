@@ -14,7 +14,7 @@ sub build_routes_for_app {
 
     my $router = Path::Router->new();
 
-    my $schema = MyApp::Schema->connect('dbi:SQLite:dbname=:memory:');
+    my $schema = MyApp::Schema->connect('dbi:SQLite:dbname=testdb.sqlite');
     $schema->deploy;
 
     my @resources = usesub("${app}::Resources");
