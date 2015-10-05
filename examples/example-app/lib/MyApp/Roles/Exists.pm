@@ -10,7 +10,9 @@ sub resource_exists {
 
     return unless $self->can($resource_key);
 
-    return !! $self->$resource_key;
+    my $resource = $self->$resource_key;
+
+    return !! ref $resource eq 'ARRAY' ? @{$resource} : $resource;
 }
 
 1;

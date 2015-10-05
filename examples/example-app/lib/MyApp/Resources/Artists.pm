@@ -5,32 +5,35 @@ use Web::Machine;
 
 extends 'Web::Machine::Resource';
 
-has router => (is => 'ro');
-has schema => (is => 'ro');
+with 'MyApp::Roles::Auth';
+with 'MyApp::Roles::SetRoute';
+with 'MyApp::Roles::Schema';
+with 'MyApp::Roles::Content';
+with 'MyApp::Roles::Exists';
+with 'MyApp::Roles::Charset';
 
-sub add_route {
-    my ($class, $router, $schema) = @_;
+has artists => (is => 'lazy');
 
-    $router->add_route("/artists" => (
-        defaults => {
-            resource => $class,
-        },
-        target => sub {
-            my ($request) = @_;
+sub _build_artists {
+    my ($self) = @_;
 
-            my $app = Web::Machine->new(
-                resource => $class,
-                resource_args => [
-                    router    => $router,
-                    schema    => $schema,
-                ],
-            )->to_app;
+    [$self->schema->resultset('Artist')->all()];
+}
 
-            return $app->($request->env);
-        }
-    ));
+sub path_part {return 'artists'}
 
-    return $router;
+sub allowed_methods {return [qw/GET PUT POST DELETE HEAD OPTIONS/]}
+
+sub to_json {
+    my ($self) = @_;
+
+    return JSON::encode_json([map +{$_->get_columns}, @{$self->artists}]);
+}
+
+sub from_json {
+    my ($self) = @_;
+
+    $self->schema->resultset('Artist')->update_or_create(JSON::decode_json($self->request->content));
 }
 
 1;
